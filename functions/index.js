@@ -117,7 +117,7 @@ exports.onUserImageChange = functions.region('europe-west1').firestore.document(
         console.log('Updating User Image');
         const batch = db.batch();
 
-        const screamsDocs = await db.collection('screams').where('userHandle', '==', change.before.data().userHandle).get();
+        const screamsDocs = await db.collection('screams').where('userHandle', '==', change.before.data().handle).get();
 
         screamsDocs.forEach(doc => {
             batch.update(doc.ref, { userImg: change.after.data().imgUrl });
@@ -127,6 +127,38 @@ exports.onUserImageChange = functions.region('europe-west1').firestore.document(
         return;
     } else {
         console.log('No user image changes, updating cancelled');
+        return;
+    }
+});
+
+exports.onScreamDelete = functions.region('europe-west1').firestore.document('screams/{screamId}').onDelete(async (snapshot, context) => {
+    const screamId = context.params.screamId;
+
+    const batch = db.batch();
+
+    console.log(`Deleting docs refered screamId: ${screamId}`);
+
+    try {
+        const commentsDocs = await db.collection('comments').where('screamId', '==', screamId).get();
+        console.log(`Deleting ${commentsDocs.size} comments`);
+        commentsDocs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        const likesDocs = await db.collection('likes').where('screamId', '==', screamId).get();
+        console.log(`Deleting ${likesDocs.size} likes`);
+        likesDocs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        const notifDocs = await db.collection('notifications').where('screamId', '==', screamId).get();
+        console.log(`Deleting ${notifDocs.size} notifications`);
+        notifDocs.forEach(doc => {
+            batch.delete(doc.ref);
+        })
+
+        await batch.commit();
+        return;
+    } catch (err) {
+        console.error(err);
         return;
     }
 })

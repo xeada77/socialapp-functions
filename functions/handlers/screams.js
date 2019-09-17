@@ -234,13 +234,6 @@ exports.deleteScream = async (req, res) => {
         if (screamDoc.data().userHandle !== req.user.handle) {
             return res.status(403).json({ error: 'Unauthorized' });
         } else {
-            let batch = db.batch()
-            const likesQuery = await db.collection('likes').where('screamId', '==', req.params.screamId).get();
-            // console.log(likesQuery.size);
-            likesQuery.forEach((like) => {
-                batch.delete(like.ref);
-            });
-            await batch.commit();
             await screamRef.delete();
             // console.log(writeRes.writeTime.toDate() ? true: false);
             return res.json({ message: 'Scream deleted successfully' });
