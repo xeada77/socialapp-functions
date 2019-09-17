@@ -110,3 +110,23 @@ exports.createNotificationOnComment = functions.region('europe-west1').firestore
         return;
     }
 })
+
+exports.onUserImageChange = functions.region('europe-west1').firestore.document('users/{userHandle}').onUpdate(async change => {
+    if (change.before.data().imgUrl !== change.after.data().imgUrl) {
+        
+        console.log('Updating User Image');
+        const batch = db.batch();
+
+        const screamsDocs = await db.collection('screams').where('userHandle', '==', change.before.data().userHandle).get();
+
+        screamsDocs.forEach(doc => {
+            batch.update(doc.ref, { userImg: change.after.data().imgUrl });
+        });
+        await batch.commit();
+        console.log('User Image updated');
+        return;
+    } else {
+        console.log('No user image changes, updating cancelled');
+        return;
+    }
+})
