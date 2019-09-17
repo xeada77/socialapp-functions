@@ -109,4 +109,5 @@ exports.createNotificationOnComment = functions.region('europe-west1').firestore
         console.error(err);
         return;
     }
-})
+});
+
