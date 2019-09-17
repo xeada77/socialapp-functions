@@ -1,22 +1,28 @@
 const { db } = require('./../util/admin');
 
 
-exports.getAllScreams = (req, res) => {
-    db
-        .collection('screams')
-        .orderBy('createdAt', 'desc')
-        .get()
-        .then((data) => {
-            let screams = [];
-            data.forEach(doc => {
-                screams.push({
-                    ...doc.data(),
-                    screamId: doc.id,
-                });
+exports.getAllScreams = async (req, res) => {
+    
+    let screams = [];
+
+    try {
+        const screamDocs = await db
+            .collection('screams')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        screamDocs.forEach(doc => {
+            screams.push({
+                ...doc.data(),
+                screamId: doc.id
             });
-            return res.json(screams);
-        })
-        .catch(err => console.error(err.message));
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: err.code });
+    }
+    
+    return res.json(screams);
 };
 
 exports.postOneScream = (req, res) => {
