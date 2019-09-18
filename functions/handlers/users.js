@@ -27,7 +27,7 @@ exports.signup = (req, res) => {
     let token, userId;
     db.doc(`/users/${newUser.handle}`).get()
         .then(doc => {
-            if (doc.exits) {
+            if (doc.exists) {
                 return res.status(400).json({ handle: 'this handle is already taken' });
             } else {
                 return firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password);
