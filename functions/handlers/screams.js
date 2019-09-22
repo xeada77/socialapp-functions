@@ -216,12 +216,25 @@ exports.unlikeScream = async (req, res) => {
             return res.status(400).json({ message: 'Scream not liked' });
         } else {
             console.log(likeDoc.docs[0].id);
-            await db.doc(`/likes/${data.docs[0].id}`).delete()
+            await db.doc(`/likes/${likeDoc.docs[0].id}`).delete()
         
             screamData.likeCount ? screamData.likeCount-- : screamData.likeCount = 0;
             await screamDoc.ref.update({ likeCount: screamData.likeCount });
                     
-            res.json(screamData)
+            let screams = [];
+
+            const screamDocs = await db
+                .collection('screams')
+                .orderBy('createdAt', 'desc')
+                .get();
+        
+            screamDocs.forEach(doc => {
+                screams.push({
+                    ...doc.data(),
+                    screamId: doc.id
+                });
+            });
+            return res.json(screams);
         }
     } catch (err) {
         console.error(err);
