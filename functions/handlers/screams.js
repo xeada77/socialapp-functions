@@ -162,27 +162,33 @@ exports.likeScream = async (req, res) => {
         likeCount = likeCount ? likeCount + 1 : 1;
         console.log(likeCount);
         // Update likeCount in Screams collection
-        const writeResult = await db.doc(`/screams/${req.params.screamId}`).update('likeCount', likeCount);
+        await db.doc(`/screams/${req.params.screamId}`).update('likeCount', likeCount);
 
         // Update likes collection adding likeData
-        const docRef = await db.collection('likes').add(likeData);
-        console.log(writeResult);
+        await db.collection('likes').add(likeData);
 
-        if (writeResult && docRef.id) {
-            //console.log(commentRef);
-            return res.json({
-                message: 'Like added successfully',
-                writeResult,
+        let screams = [];
+
+        const screamDocs = await db
+            .collection('screams')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        screamDocs.forEach(doc => {
+            screams.push({
+                ...doc.data(),
+                screamId: doc.id
             });
-        } else {
-            return res.status(500).json({ error: 'Something went wrong' });
-        }
+        });
+        return res.json(screams);
+        
         
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: err.code });
     }
 }
+
 
 // Unlike on a scream
 exports.unlikeScream = async (req, res) => {
