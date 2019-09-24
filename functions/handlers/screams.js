@@ -141,6 +141,7 @@ exports.commentOnScream = async (req, res) => {
 
 // Like on a scream
 exports.likeScream = async (req, res) => {
+    let screamData;
     try {
         const screamDoc = await db.doc(`/screams/${req.params.screamId}`).get();
         if (!screamDoc.exists) return res.status(400).json({ message: 'Scream not found' });
@@ -150,8 +151,11 @@ exports.likeScream = async (req, res) => {
             .where('userHandle', '==', req.user.handle)
             .where('screamId', '==', req.params.screamId)
             .get();
-        console.log(likeDoc.size);
+        
         if (likeDoc.size > 0) return res.status(400).json({ error: 'Scream already liked' });
+
+        screamData = screamDoc.data();
+        screamData.screamId = screamDoc.id;
 
         const likeData = {
             screamId: req.params.screamId,
@@ -167,20 +171,7 @@ exports.likeScream = async (req, res) => {
         // Update likes collection adding likeData
         await db.collection('likes').add(likeData);
 
-        let screams = [];
-
-        const screamDocs = await db
-            .collection('screams')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        screamDocs.forEach(doc => {
-            screams.push({
-                ...doc.data(),
-                screamId: doc.id
-            });
-        });
-        return res.json(screams);
+        return res.json(screamData);
         
         
     } catch (err) {
@@ -206,8 +197,8 @@ exports.unlikeScream = async (req, res) => {
                 .where('userHandle', '==', req.user.handle)
                 .where('screamId', '==', req.params.screamId)
                 .limit(1).get();
-            screamData = screamDoc.data();
-            screamData.screamId = screamDoc.id;
+                screamData = screamDoc.data();
+                screamData.screamId = screamDoc.id;
         } else {
             return res.status(400).json({ message: 'Scream not found' });
         }
@@ -221,22 +212,11 @@ exports.unlikeScream = async (req, res) => {
             screamData.likeCount ? screamData.likeCount-- : screamData.likeCount = 0;
             await screamDoc.ref.update({ likeCount: screamData.likeCount });
                     
-            let screams = [];
-
-            const screamDocs = await db
-                .collection('screams')
-                .orderBy('createdAt', 'desc')
-                .get();
-        
-            screamDocs.forEach(doc => {
-                screams.push({
-                    ...doc.data(),
-                    screamId: doc.id
-                });
-            });
-            return res.json(screams);
+    
+            return res.json(screamData);
+            }
         }
-    } catch (err) {
+    catch (err) {
         console.error(err);
         return res.status(500).json({ error: err.code });
     }    
