@@ -141,9 +141,9 @@ exports.commentOnScream = async (req, res) => {
 
 // Like on a scream
 exports.likeScream = async (req, res) => {
-    let screamData;
+    let screamData = {};
     try {
-        const screamDoc = await db.doc(`/screams/${req.params.screamId}`).get();
+        let screamDoc = await db.doc(`/screams/${req.params.screamId}`).get();
         if (!screamDoc.exists) return res.status(400).json({ message: 'Scream not found' });
 
         const likeDoc = await db
@@ -169,6 +169,7 @@ exports.likeScream = async (req, res) => {
         // Update likes collection adding likeData
         await db.collection('likes').add(likeData);
 
+        screamDoc = await db.doc(`/screams/${req.params.screamId}`).get();
         screamData = screamDoc.data();
         screamData.screamId = screamDoc.id;
 
