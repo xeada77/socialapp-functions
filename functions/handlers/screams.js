@@ -154,8 +154,6 @@ exports.likeScream = async (req, res) => {
         
         if (likeDoc.size > 0) return res.status(400).json({ error: 'Scream already liked' });
 
-        screamData = screamDoc.data();
-        screamData.screamId = screamDoc.id;
 
         const likeData = {
             screamId: req.params.screamId,
@@ -170,6 +168,9 @@ exports.likeScream = async (req, res) => {
 
         // Update likes collection adding likeData
         await db.collection('likes').add(likeData);
+
+        screamData = screamDoc.data();
+        screamData.screamId = screamDoc.id;
 
         return res.json(screamData);
         
